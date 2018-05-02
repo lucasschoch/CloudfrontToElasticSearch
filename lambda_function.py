@@ -3,6 +3,7 @@ from pprint import pprint
 import boto3
 import json
 import zlib
+import datetime
 from itertools import groupby
 
 
@@ -13,6 +14,8 @@ import urllib
 import json
 
 s3 = boto3.client('s3')
+now = datetime.datetime.now()
+cfindex = 'cloudfront-' + str(now.year) + '-' + str(now.month)
 
 print('Loading function')
 
@@ -101,12 +104,12 @@ def connectES(esEndPoint):
 
 def createIndex(esClient):
     try:
-        res = esClient.indices.exists('cloudfront-index')
+        res = esClient.indices.exists(cfindex)
         if res is False:
-            esClient.indices.create('cloudfront-index', body=indexDoc)
+            esClient.indices.create(cfindex, body=indexDoc)
 	    return 1
     except Exception as E:
-            print("Unable to Create Index {0}".format("cloudfront-index"))
+            print("Unable to Create Index {0}".format(cfindex))
             print(E)
             exit(4)
 
@@ -119,7 +122,7 @@ def indexDocElement(esClient,key,response):
         x = 0
         for line in data.splitlines():
             if x >= 2:
-                retval = esClient.index(index='cloudfront-index', doc_type='text', body={
+                retval = esClient.index(index=cfindex, doc_type='YOUR-DOC-TYPE', body={
                  'logdate': line.split('\t')[0],
                  'logtime': line.split('\t')[1],
                  'edge': line.split('\t')[2],
